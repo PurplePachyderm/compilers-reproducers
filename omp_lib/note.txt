@@ -1,0 +1,100 @@
+FOR AMD GPU (rocm 5.2.5/ Ubuntu server 20.04.5 LTS/ W6800):
+
+Compile of the lib and program:
+
+
+Compile object file:
+
+ /opt/rocm/llvm/bin/clang -target x86_64-pc-linux-gnu  -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1030 -v -fPIC -g -c  libWithOpenMP.c 
+
+
+For shared:
+
+	compile the lib:
+
+	/opt/rocm/llvm/bin/clang -target x86_64-pc-linux-gnu -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1030 -v -fPIC -g -c -shared src/libWithOpenMP.o src/libWithOpenMP.c -o libtest.so
+
+	Compile test.c:
+
+
+	/opt/rocm/llvm/bin/clang -target x86_64-pc-linux-gnu  -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1030 -g -L./lib -ltest test.c
+
+
+
+For static:
+
+	Compile the lib:
+
+	ar r libtest.a src/libWithOpenMP.o
+
+	Compile test.c
+	
+	/opt/rocm/llvm/bin/clang -target x86_64-pc-linux-gnu  -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1030 -g ./lib/libtest.a test.c 
+1.
+
+
+Test.c is the first reproducer to test the acces to a pointer
+
+We test the acces to a pointers from the lib. 
+
+We test the two version version of the lib, static and shared.
+
+Result:
+
+No issues work with static and shared lib
+
+
+
+
+
+
+
+FOR NVIDIA GPU (NVHPC 22.9/ A100):
+
+
+Compile the lib and program:
+
+Compile object file:
+
+ nvc -mp -target=gpu -gpu=cc80 -fPIC -g -c libWithOpenMP.c
+
+For shared:
+
+	Compile the lib:
+
+	nvc -mp -target=gpu -gpu=cc80 -fPIC -g -c -shared src/libWithOpenMP.c -o libtest.so
+
+	Compile test.c:
+
+	nvc -mp -target=gpu -gpu=cc80 -g  -L./lib -ltest test.c
+
+For static:
+
+	Compile the lib
+
+	ar r libtest.a src/libWithOpenMP.o
+
+	Compile test.c
+
+	nvc -mp -target=gpu -gpu=cc80 -g test.c  ./lib/libtest.a
+
+
+
+
+1.
+
+Result:
+
+	nvidia can't create bitcode for the GPU and crash at the JIT compilation for the GPU.
+
+	The result is for version > 22.9:
+
+	Accelerator Fatal Error: Failed to find device function 'nvkernel_checkAcces_F1L29_2'! File was compiled with: -gpu=cc80
+	Rebuild this file with -gpu=cc80 to use NVIDIA Tesla GPU 0
+ 	 File: omp.c
+	 Function: __nvomp_omp_target_alloc
+	 Line: 940
+
+	For lower version of NVHPC it just result to an error: CUBIN not found, when it want to execute function that the compiler failed to compile for the GPU. 
+
+	With the static lib we don't have any issue with that.
