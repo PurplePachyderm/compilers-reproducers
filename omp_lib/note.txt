@@ -1,4 +1,4 @@
-FOR NVIDIA GPU (NVHPC 22.9/ A100):
+FOR NVIDIA GPU (NVHPC 22.9/ A100 and NVHPC 23.1 / MX450):
 
 
 Compile the lib and program:
@@ -33,6 +33,7 @@ For static:
 1.
 
 Result:
+	
 
 	nvidia can't create bitcode for the GPU and crash at the JIT compilation for the GPU.
 
@@ -47,3 +48,8 @@ Result:
 	For lower version of NVHPC it just result to an error: CUBIN not found, when it want to execute function that the compiler failed to compile for the GPU. 
 
 	With the static lib we don't have any issue with that.
+
+
+	The result for 23.1 version:
+	
+	Same error
