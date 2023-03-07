@@ -1,2 +1,2 @@
-# nvc-reproducers
-Reproducers to higlight issues with the nvc compiler
+# compilers-reproducers
+Reproducers to higlight issues with different compilers (mostly nvc/icx)
