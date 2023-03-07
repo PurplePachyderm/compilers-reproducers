@@ -1,21 +1,25 @@
-FOR NVIDIA GPU (NVHPC 22.9/ A100 and NVHPC 23.1 / MX450):
+
 
 
 Compile the lib and program:
 
 Compile object file:
 
- nvc -mp -target=gpu -gpu=cc80 -fPIC -g -c libWithOpenMP.c
+
+icx libWithOpenMP.c -fPIC -qmkl=sequential -qopenmp -fopenmp-targets=spir64 -c
+
 
 For shared:
 
-	Compile the lib:
-
-	nvc -mp -target=gpu -gpu=cc80 -fPIC -g -c -shared src/libWithOpenMP.c -o libtest.so
+	Compile the lib: 
+	
+	icx -fPIC -qmkl=sequential -qopenmp -fopenmp-targets=spir64 -shared -c -g -fPIC src/libWithOpenMP.c -o libtest.so
+	
 
 	Compile test.c:
 
-	nvc -mp -target=gpu -gpu=cc80 -g  -L./lib -ltest test.c
+	icx -qmkl=sequential -qopenmp -fopenmp-targets=spir64 -L./lib/ -I./lib/src -ltest test.c -g -o sharedOut
+	
 
 For static:
 
@@ -25,31 +29,28 @@ For static:
 
 	Compile test.c
 
-	nvc -mp -target=gpu -gpu=cc80 -g test.c  ./lib/libtest.a
-
+	icx -qmkl=sequential -qopenmp -fopenmp-targets=spir64 -I./lib/src/ ./lib/libtest.a  test.c -o staticout
 
 
 
 1.
 
-Result:
-	
-
-	nvidia can't create bitcode for the GPU and crash at the JIT compilation for the GPU.
-
-	The result is for version > 22.9:
-
-	Accelerator Fatal Error: Failed to find device function 'nvkernel_checkAcces_F1L29_2'! File was compiled with: -gpu=cc80
-	Rebuild this file with -gpu=cc80 to use NVIDIA Tesla GPU 0
- 	 File: omp.c
-	 Function: __nvomp_omp_target_alloc
-	 Line: 940
-
-	For lower version of NVHPC it just result to an error: CUBIN not found, when it want to execute function that the compiler failed to compile for the GPU. 
-
-	With the static lib we don't have any issue with that.
+RESULT:
 
 
-	The result for 23.1 version:
-	
-	Same error
+For shared:
+
+0xffffd556aa7e0000 
+0xffffd556aa7e0080 
+LEVEL0 error: Failed to invoke deleted kernel.
+Libomptarget error: Executing target region abort target.
+Libomptarget error: Run with
+Libomptarget error: LIBOMPTARGET_DEBUG=1 to display basic debug information.
+Libomptarget error: LIBOMPTARGET_DEBUG=2 to display calls to the compute runtime.
+Libomptarget error: LIBOMPTARGET_INFO=4 to dump host-target pointer mappings.
+libWithOpenMP.c:28:30: Libomptarget fatal error 1: failure of target construct while offloading is mandatory
+Aborted
+
+For static:
+
+Can't compile, don't find any function from the lib
